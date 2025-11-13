@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Энгийн JavaScript жишээ — To‑Do</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    h1 { text-align: center; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+    .controls { display:flex; gap:8px; margin-bottom:12px; }
+    input[type=text] { flex:1; padding:8px; font-size:16px; }
+    button { padding:8px 12px; font-size:16px; cursor:pointer; }
+    ul { list-style:none; padding-left:0; }
+    li { padding:8px 6px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #f0f0f0; }
+    li.done span { text-decoration: line-through; color: #777; }
+    .spacer { margin-left:auto; display:flex; gap:6px; }
+    .small { font-size:13px; opacity:0.8; }
+  </style>
+</head>
+<body>
+  <h1>Энгийн JavaScript жишээ — To‑Do</h1>
+  <div class="card">
+    <div class="controls">
+      <input id="taskInput" type="text" placeholder="Шинэ даалгавар оруулна уу..." />
+      <button id="addBtn">Нэмэх</button>
+      <button id="clearBtn">Бүгдийг цэвэрлэх</button>
+    </div>
+    <ul id="list"></ul>
+    <p class="small">Энэ нь HTML + vanilla JavaScript ашигласан жижиг анхны жишээ. Та кодыг өөрчлөөд туршиж болно.</p>
+  </div>
+
+  <script>
+    // Энгийн To-Do программ — зарим үндсэн DOM үйлдлүүд болон localStorage ашиглана
+
+    const input = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const listEl = document.getElementById('list');
+
+    // localStorage дээр хадгалагдсан даалгавруудыг унших
+    let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+
+    function save() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function render() {
+      listEl.innerHTML = '';
+      if (tasks.length === 0) {
+        listEl.innerHTML = '<li class="small">Ажил байхгүй байна.</li>';
+        return;
+      }
+
+      tasks.forEach((t, i) => {
+        const li = document.createElement('li');
+        if (t.done) li.classList.add('done');
+
+        const span = document.createElement('span');
+        span.textContent = t.text;
+        span.style.cursor = 'pointer';
+        span.title = 'Дарж 완료/буцаах';
+
+        // Даалгаврыг дархад хийсэн/хийгээгүй гэж тэмдэглэнэ
+        span.addEventListener('click', () => {
+          tasks[i].done = !tasks[i].done;
+          save();
+          render();
+        });
+
+        const spacer = document.createElement('div');
+        spacer.className = 'spacer';
+
+        // Устгах товч
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Устгах';
+        delBtn.addEventListener('click', () => {
+          tasks.splice(i, 1);
+          save();
+          render();
+        });
+
+        spacer.appendChild(delBtn);
+
+        li.appendChild(span);
+        li.appendChild(spacer);
+        listEl.appendChild(li);
+      });
+    }
+
+    // Шинэ даалгавар оруулах үйлдэл
+    function addTask() {
+      const text = input.value.trim();
+      if (!text) return alert('Даалгаврын текст оруулна уу.');
+
+      tasks.push({ text, done: false });
+      input.value = '';
+      save();
+      render();
+    }
+
+    // Бүх даалгаврыг цэвэрлэх
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('Бүх даалгаврыг устгах уу?')) return;
+      tasks = [];
+      save();
+      render();
+    });
+
+    addBtn.addEventListener('click', addTask);
+
+    // Enter дарахад нэмэх
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    // Эхэндээ рендерлэх
+    render();
+  </script>
+</body>
+</html>
